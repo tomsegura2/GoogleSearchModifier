@@ -1,3 +1,5 @@
+NO LONGER WORKS
+
 # GoogleSearchModifier
 Google Search Results Modifier
 
