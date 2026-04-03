@@ -1,18 +1,30 @@
-document.getElementById("modify-button").addEventListener("click", () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        let tab = tabs[0];
-        if (tab.url && tab.url.includes("www.google.com/search")) {
-            let url = new URL(tab.url);
+document.getElementById('scrape-button').addEventListener('click', () => {
+  const url = document.getElementById('url-input').value;
+  if (!url) {
+    alert('Please enter a URL.');
+    return;
+  }
 
-            // Modify the URL
-            if (!url.searchParams.has("num") || url.searchParams.get("num") !== "100") {
-                url.searchParams.set("num", "100");
-                chrome.tabs.update(tab.id, { url: url.href });
-            } else {
-                alert("This Google search page already shows 100 results.");
-            }
-        } else {
-            alert("This is not a Google search results page.");
-        }
+  const apiUrl = `https://archive.org/wayback/available?url=${encodeURIComponent(url)}`;
+
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      const resultsDiv = document.getElementById('results');
+      if (data.archived_snapshots && data.archived_snapshots.closest) {
+        const snapshot = data.archived_snapshots.closest;
+        resultsDiv.innerHTML = `
+          <p><strong>Closest Snapshot Found:</strong></p>
+          <p><strong>URL:</strong> <a href="${snapshot.url}" target="_blank">${snapshot.url}</a></p>
+          <p><strong>Timestamp:</strong> ${snapshot.timestamp}</p>
+        `;
+      } else {
+        resultsDiv.innerHTML = '<p>No snapshots found for this URL.</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching from Wayback Machine API:', error);
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>An error occurred while fetching data.</p>';
     });
 });
